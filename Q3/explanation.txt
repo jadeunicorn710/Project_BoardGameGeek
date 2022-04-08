@@ -1,0 +1,1 @@
+We may want to use nonlinear scales such as square root scale or log scale when our data values vary drastically, where a linear scale cannot provide adequate insights for data comparisons. Nonlinear scales can reduce gaps between linear data and make line charts more explicit.

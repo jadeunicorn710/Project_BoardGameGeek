@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<link rel="shortcut icon" href="#" />
+<script type="text/javascript" src="../lib/d3.v5.min.js"></script>
+<style type="text/css">
+
+/* basic styling with CSS */
+.line {
+    fill: none;
+    stroke: #ffab00;
+    stroke-width: 3;
+}
+
+.overlay {
+    fill: none;
+    pointer-events: all;
+}
+
+/* style the dots by assigning a fill and stroke */
+/* .dot {
+    fill: #ffab00;
+    stroke: #fff;
+} */
+
+.focus circle {
+    fill: none;
+    stroke: steelblue;
+}
+</style>
+
+<body>
+<script>
+
+// define function to parse time in "month year" format
+var parse_time =  d3.timeParse("%Y-%m-%d");
+
+// define functioin to format time in years
+var format_time = d3.timeFormat("%b %y")
+
+// define Tableau10 color schemes for board games
+var color_schemes = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#e377c2", "#bcbd22", "#17becf"]
+
+// Get the data
+var pathToCsv = "boardgame_ratings.csv";		// path to csv
+
+d3.dsv(",", pathToCsv, function (d) {
+return {
+    // format data attributes if required
+    date: parse_time(d["date"]),
+    Catan_count: +d["Catan=count"],
+    Dominion_count: +d["Dominion=count"],
+    Codenames_count: +d["Codenames=count"],
+    Terraforming_Mars_count: +d["Terraforming Mars=count"],
+    Gloomhaven_count: +d["Gloomhaven=count"],
+    Magic_count: +d["Magic: The Gathering=count"],
+    Dixit_count: +d["Dixit=count"],
+    Monopoly_count: +d["Monopoly=count"],
+    Catan_rank: +d["Catan=rank"],
+    Codenames_rank: +d["Codenames=rank"],
+    Terraforming_Mars_rank: +d["Terraforming Mars=rank"],
+    Gloomhaven_rank: +d["Gloomhaven=rank"]
+}
+}).then(function (data) {
+    console.log(data); // you should see the data in your browser's developer tools console
+    /* Create line charts using data from csv */
+
+    // define the margins
+    var margins = {top: 50, right: 100, bottom: 50, left: 50}
+      , width = window.innerWidth - margins.left - margins.right // Use the window's width 
+      , height = window.innerHeight - margins.top - margins.bottom; // Use the window's height
+
+    // create scales x & y for X and Y axis and set their ranges
+    // create scale y for Y axis with range
+    var y = d3.scaleLinear()
+            .range([height - 50, 50]);
+
+    // create scale x for X axis with range
+    var x = d3.scaleTime()
+              .range([20, width - 100]);
+
+    // set the domains of X and Y scales based on data
+    x.domain([d3.min(data, function(d) {return d.date;}), d3.max(data, function(d) {return d.date;})]);
+    // x.domain(data.map(function(d) {return d.year;}))
+    y.domain([0, d3.max(data, function(d) {
+        return Math.max(d.Catan_count, d.Dominion_count, d.Codenames_count, d.Terraforming_Mars_count, 
+        d.Gloomhaven_count, d.Magic_count, d.Dixit_count, d.Monopoly_count);})]); 
+
+    // define the X Axis
+    var x_axis = d3.axisBottom(x).tickFormat(format_time)
+                 .tickValues(d3.timeMonth.every(3)
+                 .range(d3.min(data, function(d) {return d.date;}), d3.max(data, function(d) {return d.date;})));
+
+    // define the Y Axis
+    var y_axis = d3.axisLeft(y).ticks(10);
+
+
+    // define lines
+    var line1 = d3.line().x(function(d) {return x(d.date);}).y(function(d) {return y(d.Catan_count);}).curve(d3.curveMonotoneX)
+    var line2 = d3.line().x(function(d) {return x(d.date);}).y(function(d) {return y(d.Dominion_count);}).curve(d3.curveMonotoneX)
+    var line3 = d3.line().x(function(d) {return x(d.date);}).y(function(d) {return y(d.Codenames_count);}).curve(d3.curveMonotoneX)
+    var line4 = d3.line().x(function(d) {return x(d.date);}).y(function(d) {return y(d.Terraforming_Mars_count);}).curve(d3.curveMonotoneX)
+    var line5 = d3.line().x(function(d) {return x(d.date);}).y(function(d) {return y(d.Gloomhaven_count);}).curve(d3.curveMonotoneX)
+    var line6 = d3.line().x(function(d) {return x(d.date);}).y(function(d) {return y(d.Magic_count);}).curve(d3.curveMonotoneX)
+    var line7 = d3.line().x(function(d) {return x(d.date);}).y(function(d) {return y(d.Dixit_count);}).curve(d3.curveMonotoneX)
+    var line8 = d3.line().x(function(d) {return x(d.date);}).y(function(d) {return y(d.Monopoly_count);}).curve(d3.curveMonotoneX)
+
+    // draw line chart 1
+    // append svg element to the body of the page
+    // set dimensions and position of the svg element
+    var svg1 = d3.select("body").append("svg")
+          .attr("width", width + margins.left + margins.right)
+          .attr("height", height + margins.top + margins.bottom)
+          .append("g")
+          .attr("transform","translate(" + margins.left + "," + margins.top + ")");
+
+    // add title
+    svg1.append("text").attr("x", width / 2).attr("y", margins.top / 2)
+        .attr("text-anchor", "middle")
+        .style("font-weight", "bold")
+        .style("font-size", "20px")
+        .text("Number of Ratings 2016-2020"); 
+
+    // add axis
+    svg1.append("g").attr("class", "x axis").attr("transform", "translate(0," + (height-50) + ")").call(x_axis);
+    svg1.append("g").attr("class", "y axis").attr("transform", "translate(" + 20 + ",0)").call(y_axis);
+
+    // add axis labels
+    svg1.append("text").attr("transform", "translate(" + width / 2 + " ," + (height) + ")")
+       .style("text-anchor", "middle").style("font-weight","bold").text("Month")
+    svg1.append("text").attr("transform", "rotate(-90)").attr("y", 0 - margins.left)
+       .attr("x", 0 - height / 2).attr("dy", "1em").style("text-aochor", "middle").style("font-weight","bold").text("Number of Ratings");
+
+    // add lines
+    svg1.append("path").datum(data).attr("class", "line").style("stroke", '#1f77b4').attr("d", line1);
+    svg1.append("path").datum(data).attr("class", "line").style("stroke", '#ff7f0e').attr("d", line2);
+    svg1.append("path").datum(data).attr("class", "line").style("stroke", '#2ca02c').attr("d", line3);
+    svg1.append("path").datum(data).attr("class", "line").style("stroke", '#d62728').attr("d", line4);
+    svg1.append("path").datum(data).attr("class", "line").style("stroke", '#9467bd').attr("d", line5);
+    svg1.append("path").datum(data).attr("class", "line").style("stroke", '#e377c2').attr("d", line6);
+    svg1.append("path").datum(data).attr("class", "line").style("stroke", '#bcbd22').attr("d", line7);
+    svg1.append("path").datum(data).attr("class", "line").style("stroke", '#17becf').attr("d", line8);
+
+    // add line labels
+    svg1.append("text").attr("transform", "translate(" + (width-90) + "," + y(data[45].Catan_count) + ")")
+		.attr("dy", ".35em").attr("font-size", 14).attr("text-anchor", "start").style("fill", "#1f77b4").text("Catan");
+    svg1.append("text").attr("transform", "translate(" + (width-90) + "," + y(data[45].Dominion_count) + ")")
+		.attr("dy", ".35em").attr("font-size", 14).attr("text-anchor", "start").style("fill", "#ff7f0e").text("Dominion");
+    svg1.append("text").attr("transform", "translate(" + (width-90) + "," + y(data[45].Codenames_count) + ")")
+		.attr("dy", ".35em").attr("font-size", 14).attr("text-anchor", "start").style("fill", "#2ca02c").text("Codenames");
+    svg1.append("text").attr("transform", "translate(" + (width-90) + "," + y(data[45].Terraforming_Mars_count) + ")")
+		.attr("dy", ".35em").attr("font-size", 14).attr("text-anchor", "start").style("fill", "#d62728").text("Terraforming Mars");
+    svg1.append("text").attr("transform", "translate(" + (width-90) + "," + y(data[45].Gloomhaven_count) + ")")
+		.attr("dy", ".35em").attr("font-size", 14).attr("text-anchor", "start").style("fill", "#9467bd").text("Gloomhaven");
+    svg1.append("text").attr("transform", "translate(" + (width-90) + "," + y(data[45].Magic_count) + ")")
+		.attr("dy", ".35em").attr("font-size", 14).attr("text-anchor", "start").style("fill", "#e377c2").text("Magic: The Gathering");
+    svg1.append("text").attr("transform", "translate(" + (width-90) + "," + y(data[45].Dixit_count) + ")")
+		.attr("dy", ".35em").attr("font-size", 14).attr("text-anchor", "start").style("fill", "#bcbd22").text("Dixit");
+    svg1.append("text").attr("transform", "translate(" + (width-90) + "," + y(data[45].Monopoly_count) + ")")
+		.attr("dy", ".35em").attr("font-size", 14).attr("text-anchor", "start").style("fill", "#17becf").text("Monopoly");
+
+    // // Add GT name to bottom right
+    // svg1.append("text").attr("x", width - margins.right - 50).attr("y", height).style("font-size", "12px").text("yqi82")
+
+
+    // draw line chart 2
+    // append svg element to the body of the page
+    // set dimensions and position of the svg element
+    var svg2 = d3.select("body").append("svg")
+          .attr("width", width + margins.left + margins.right)
+          .attr("height", height + margins.top + margins.bottom)
+          .append("g")
+          .attr("transform","translate(" + margins.left + "," + margins.top + ")");
+
+    // add title
+    svg2.append("text").attr("x", width / 2).attr("y", margins.top / 2)
+        .attr("text-anchor", "middle")
+        .style("font-weight", "bold")
+        .style("font-size", "20px")
+        .text("Number of Ratings 2016-2020 with Rankings"); 
+
+    // add axis
+    svg2.append("g").attr("class", "x axis").attr("transform", "translate(0," + (height-50) + ")").call(x_axis);
+    svg2.append("g").attr("class", "y axis").attr("transform", "translate(" + 20 + ",0)").call(y_axis);
+
+    // add axis labels
+    svg2.append("text").attr("transform", "translate(" + width / 2 + " ," + (height) + ")")
+       .style("text-anchor", "middle").style("font-weight","bold").text("Month")
+    svg2.append("text").attr("transform", "rotate(-90)").attr("y", 0 - margins.left)
+       .attr("x", 0 - height / 2).attr("dy", "1em").style("text-aochor", "middle").style("font-weight","bold").text("Number of Ratings");
+
+    // add lines
+    svg2.append("path").datum(data).attr("class", "line").style("stroke", '#1f77b4').attr("d", line1);
+    svg2.append("path").datum(data).attr("class", "line").style("stroke", '#ff7f0e').attr("d", line2);
+    svg2.append("path").datum(data).attr("class", "line").style("stroke", '#2ca02c').attr("d", line3);
+    svg2.append("path").datum(data).attr("class", "line").style("stroke", '#d62728').attr("d", line4);
+    svg2.append("path").datum(data).attr("class", "line").style("stroke", '#9467bd').attr("d", line5);
+    svg2.append("path").datum(data).attr("class", "line").style("stroke", '#e377c2').attr("d", line6);
+    svg2.append("path").datum(data).attr("class", "line").style("stroke", '#bcbd22').attr("d", line7);
+    svg2.append("path").datum(data).attr("class", "line").style("stroke", '#17becf').attr("d", line8);
+
+    // add line labels
+    svg2.append("text").attr("transform", "translate(" + (width-90) + "," + y(data[45].Catan_count) + ")")
+		.attr("dy", ".35em").attr("font-size", 14).attr("text-anchor", "start").style("fill", "#1f77b4").text("Catan");
+    svg2.append("text").attr("transform", "translate(" + (width-90) + "," + y(data[45].Dominion_count) + ")")
+		.attr("dy", ".35em").attr("font-size", 14).attr("text-anchor", "start").style("fill", "#ff7f0e").text("Dominion");
+    svg2.append("text").attr("transform", "translate(" + (width-90) + "," + y(data[45].Codenames_count) + ")")
+		.attr("dy", ".35em").attr("font-size", 14).attr("text-anchor", "start").style("fill", "#2ca02c").text("Codenames");
+    svg2.append("text").attr("transform", "translate(" + (width-90) + "," + y(data[45].Terraforming_Mars_count) + ")")
+		.attr("dy", ".35em").attr("font-size", 14).attr("text-anchor", "start").style("fill", "#d62728").text("Terraforming Mars");
+    svg2.append("text").attr("transform", "translate(" + (width-90) + "," + y(data[45].Gloomhaven_count) + ")")
+		.attr("dy", ".35em").attr("font-size", 14).attr("text-anchor", "start").style("fill", "#9467bd").text("Gloomhaven");
+    svg2.append("text").attr("transform", "translate(" + (width-90) + "," + y(data[45].Magic_count) + ")")
+		.attr("dy", ".35em").attr("font-size", 14).attr("text-anchor", "start").style("fill", "#e377c2").text("Magic: The Gathering");
+    svg2.append("text").attr("transform", "translate(" + (width-90) + "," + y(data[45].Dixit_count) + ")")
+		.attr("dy", ".35em").attr("font-size", 14).attr("text-anchor", "start").style("fill", "#bcbd22").text("Dixit");
+    svg2.append("text").attr("transform", "translate(" + (width-90) + "," + y(data[45].Monopoly_count) + ")")
+		.attr("dy", ".35em").attr("font-size", 14).attr("text-anchor", "start").style("fill", "#17becf").text("Monopoly");
+
+
+    // define filtered ranking locations and values
+    var filtered_rankings = svg2.selectAll(".dot").data(data.filter(function(d, i) {return (i + 1) % 3 == 0})).enter()
+    var filtered_ranking_values = svg2.selectAll(".text").data(data.filter(function(d, i) {return (i + 1) % 3 == 0})).enter()
+
+    // add rankings for Catan
+    filtered_rankings.append("circle").attr("class", "dot").attr("cx", line1.x()).attr("cy", line1.y()).attr("r", 15).attr("fill", "#1f77b4");
+    filtered_ranking_values.append("text").attr("class", "text").attr("x", line1.x()).attr("y", line1.y()).attr("dy", ".35em").attr("text-anchor", "middle")
+                           .style("fill", "#fff").attr("font-size", 14).text( function(d) {return d.Catan_rank;});
+
+    // add rankings for Codenames
+    filtered_rankings.append("circle").attr("class", "dot").attr("cx", line3.x()).attr("cy", line3.y()).attr("r", 15).attr("fill", "#2ca02c");
+    filtered_ranking_values.append("text").attr("class", "text").attr("x", line3.x()).attr("y", line3.y()).attr("dy", ".35em").attr("text-anchor", "middle")
+                           .style("fill", "#fff").attr("font-size", 14).text( function(d) {return d.Codenames_rank;});
+
+    // add rankings for Terraforming Mars
+    filtered_rankings.append("circle").attr("class", "dot").attr("cx", line4.x()).attr("cy", line4.y()).attr("r", 15).attr("fill", "#d62728");
+    filtered_ranking_values.append("text").attr("class", "text").attr("x", line4.x()).attr("y", line4.y()).attr("dy", ".35em").attr("text-anchor", "middle")
+                           .style("fill", "#fff").attr("font-size", 14).text( function(d) {return d.Terraforming_Mars_rank;});
+
+
+    // add rankings for Gloomhaven
+    filtered_rankings.append("circle").attr("class", "dot").attr("cx", line5.x()).attr("cy", line5.y()).attr("r", 15).attr("fill", "#9467bd");
+
+    filtered_ranking_values.append("text").attr("class", "text").attr("x", line5.x()).attr("y", line5.y()).attr("dy", ".35em").attr("text-anchor", "middle")
+                           .style("fill", "#fff").attr("font-size", 14).text( function(d) {return d.Gloomhaven_rank;});
+
+    // add legend
+    svg2.append("circle").attr("cx",width-20).attr("cy",height-100).attr("r", 20).style("fill", "#000000");
+    svg2.append("text").attr("x", width-20).attr("y", height-100).attr("dy", ".35em").attr("text-anchor", "middle")
+                       .style("fill", "#fff").attr("font-size", 14).text("rank");
+    svg2.append("text").attr("x", width-20).attr("y", height-60).attr("text-anchor", "middle")
+                       .style("fill", "#000000").attr("font-size", 14).text("BoardGameGeek Rank");
+
+    // // Add GT name to bottom right
+    // svg2.append("text").attr("x", width - margins.right - 50).attr("y", height).style("font-size", "12px").text("yqi82")                
+
+
+
+    // draw line chart 3
+    // create square root scale y_sr for Y axis with range
+    var y_sr = d3.scaleSqrt()
+                 .range([height - 50, 50]);
+    // define y_sr domain
+    y_sr.domain([0, d3.max(data, function(d) {
+        return Math.max(d.Catan_count, d.Dominion_count, d.Codenames_count, d.Terraforming_Mars_count, 
+        d.Gloomhaven_count, d.Magic_count, d.Dixit_count, d.Monopoly_count);})]);
+
+    // define the Y_sr Axis
+    var y_axis_sr = d3.axisLeft(y_sr).ticks(10);
+
+
+    // define lines_sr
+    var line1_sr = d3.line().x(function(d) {return x(d.date);}).y(function(d) {return y_sr(d.Catan_count);}).curve(d3.curveMonotoneX)
+    var line2_sr = d3.line().x(function(d) {return x(d.date);}).y(function(d) {return y_sr(d.Dominion_count);}).curve(d3.curveMonotoneX)
+    var line3_sr = d3.line().x(function(d) {return x(d.date);}).y(function(d) {return y_sr(d.Codenames_count);}).curve(d3.curveMonotoneX)
+    var line4_sr = d3.line().x(function(d) {return x(d.date);}).y(function(d) {return y_sr(d.Terraforming_Mars_count);}).curve(d3.curveMonotoneX)
+    var line5_sr = d3.line().x(function(d) {return x(d.date);}).y(function(d) {return y_sr(d.Gloomhaven_count);}).curve(d3.curveMonotoneX)
+    var line6_sr = d3.line().x(function(d) {return x(d.date);}).y(function(d) {return y_sr(d.Magic_count);}).curve(d3.curveMonotoneX)
+    var line7_sr = d3.line().x(function(d) {return x(d.date);}).y(function(d) {return y_sr(d.Dixit_count);}).curve(d3.curveMonotoneX)
+    var line8_sr = d3.line().x(function(d) {return x(d.date);}).y(function(d) {return y_sr(d.Monopoly_count);}).curve(d3.curveMonotoneX)
+
+
+    // append svg element to the body of the page
+    // set dimensions and position of the svg element
+    var svg3 = d3.select("body").append("svg")
+          .attr("width", width + margins.left + margins.right)
+          .attr("height", height + margins.top + margins.bottom)
+          .append("g")
+          .attr("transform","translate(" + margins.left + "," + margins.top + ")");
+
+    // add title
+    svg3.append("text").attr("x", width / 2).attr("y", margins.top / 2)
+        .attr("text-anchor", "middle")
+        .style("font-weight", "bold")
+        .style("font-size", "20px")
+        .text("Number of Ratings 2016-2020 (Square root Scale)"); 
+
+    // add axis
+    svg3.append("g").attr("class", "x axis").attr("transform", "translate(0," + (height-50) + ")").call(x_axis);
+    svg3.append("g").attr("class", "y axis").attr("transform", "translate(" + 20 + ",0)").call(y_axis_sr);
+
+    // add axis labels
+    svg3.append("text").attr("transform", "translate(" + width / 2 + " ," + (height) + ")")
+       .style("text-anchor", "middle").style("font-weight","bold").text("Month")
+    svg3.append("text").attr("transform", "rotate(-90)").attr("y", 0 - margins.left)
+       .attr("x", 0 - height / 2).attr("dy", "1em").style("text-aochor", "middle").style("font-weight","bold").text("Number of Ratings");
+
+    // add lines
+    svg3.append("path").datum(data).attr("class", "line").style("stroke", '#1f77b4').attr("d", line1_sr);
+    svg3.append("path").datum(data).attr("class", "line").style("stroke", '#ff7f0e').attr("d", line2_sr);
+    svg3.append("path").datum(data).attr("class", "line").style("stroke", '#2ca02c').attr("d", line3_sr);
+    svg3.append("path").datum(data).attr("class", "line").style("stroke", '#d62728').attr("d", line4_sr);
+    svg3.append("path").datum(data).attr("class", "line").style("stroke", '#9467bd').attr("d", line5_sr);
+    svg3.append("path").datum(data).attr("class", "line").style("stroke", '#e377c2').attr("d", line6_sr);
+    svg3.append("path").datum(data).attr("class", "line").style("stroke", '#bcbd22').attr("d", line7_sr);
+    svg3.append("path").datum(data).attr("class", "line").style("stroke", '#17becf').attr("d", line8_sr);
+
+    // add line labels
+    svg3.append("text").attr("transform", "translate(" + (width-90) + "," + y_sr(data[45].Catan_count) + ")")
+		.attr("dy", ".35em").attr("font-size", 14).attr("text-anchor", "start").style("fill", "#1f77b4").text("Catan");
+    svg3.append("text").attr("transform", "translate(" + (width-90) + "," + y_sr(data[45].Dominion_count) + ")")
+		.attr("dy", ".35em").attr("font-size", 14).attr("text-anchor", "start").style("fill", "#ff7f0e").text("Dominion");
+    svg3.append("text").attr("transform", "translate(" + (width-90) + "," + y_sr(data[45].Codenames_count) + ")")
+		.attr("dy", ".35em").attr("font-size", 14).attr("text-anchor", "start").style("fill", "#2ca02c").text("Codenames");
+    svg3.append("text").attr("transform", "translate(" + (width-90) + "," + y_sr(data[45].Terraforming_Mars_count) + ")")
+		.attr("dy", ".35em").attr("font-size", 14).attr("text-anchor", "start").style("fill", "#d62728").text("Terraforming Mars");
+    svg3.append("text").attr("transform", "translate(" + (width-90) + "," + y_sr(data[45].Gloomhaven_count) + ")")
+		.attr("dy", ".35em").attr("font-size", 14).attr("text-anchor", "start").style("fill", "#9467bd").text("Gloomhaven");
+    svg3.append("text").attr("transform", "translate(" + (width-90) + "," + y_sr(data[45].Magic_count) + ")")
+		.attr("dy", ".35em").attr("font-size", 14).attr("text-anchor", "start").style("fill", "#e377c2").text("Magic: The Gathering");
+    svg3.append("text").attr("transform", "translate(" + (width-90) + "," + y_sr(data[45].Dixit_count) + ")")
+		.attr("dy", ".35em").attr("font-size", 14).attr("text-anchor", "start").style("fill", "#bcbd22").text("Dixit");
+    svg3.append("text").attr("transform", "translate(" + (width-90) + "," + y_sr(data[45].Monopoly_count) + ")")
+		.attr("dy", ".35em").attr("font-size", 14).attr("text-anchor", "start").style("fill", "#17becf").text("Monopoly");
+
+
+    // define filtered ranking locations and values
+    var filtered_rankings_sr = svg3.selectAll(".dot").data(data.filter(function(d, i) {return (i + 1) % 3 == 0})).enter()
+    var filtered_ranking_values_sr = svg3.selectAll(".text").data(data.filter(function(d, i) {return (i + 1) % 3 == 0})).enter()
+
+    // add rankings for Catan
+    filtered_rankings_sr.append("circle").attr("class", "dot").attr("cx", line1_sr.x()).attr("cy", line1_sr.y()).attr("r", 15).attr("fill", "#1f77b4");
+    filtered_ranking_values_sr.append("text").attr("class", "text").attr("x", line1_sr.x()).attr("y", line1_sr.y()).attr("dy", ".35em").attr("text-anchor", "middle")
+                           .style("fill", "#fff").attr("font-size", 14).text( function(d) {return d.Catan_rank;});
+
+    // add rankings for Codenames
+    filtered_rankings_sr.append("circle").attr("class", "dot").attr("cx", line3_sr.x()).attr("cy", line3_sr.y()).attr("r", 15).attr("fill", "#2ca02c");
+    filtered_ranking_values_sr.append("text").attr("class", "text").attr("x", line3_sr.x()).attr("y", line3_sr.y()).attr("dy", ".35em").attr("text-anchor", "middle")
+                           .style("fill", "#fff").attr("font-size", 14).text( function(d) {return d.Codenames_rank;});
+
+    // add rankings for Terraforming Mars
+    filtered_rankings_sr.append("circle").attr("class", "dot").attr("cx", line4_sr.x()).attr("cy", line4_sr.y()).attr("r", 15).attr("fill", "#d62728");
+    filtered_ranking_values_sr.append("text").attr("class", "text").attr("x", line4_sr.x()).attr("y", line4_sr.y()).attr("dy", ".35em").attr("text-anchor", "middle")
+                           .style("fill", "#fff").attr("font-size", 14).text( function(d) {return d.Terraforming_Mars_rank;});
+
+
+    // add rankings for Gloomhaven
+    filtered_rankings_sr.append("circle").attr("class", "dot").attr("cx", line5_sr.x()).attr("cy", line5_sr.y()).attr("r", 15).attr("fill", "#9467bd");
+
+    filtered_ranking_values_sr.append("text").attr("class", "text").attr("x", line5_sr.x()).attr("y", line5_sr.y()).attr("dy", ".35em").attr("text-anchor", "middle")
+                           .style("fill", "#fff").attr("font-size", 14).text( function(d) {return d.Gloomhaven_rank;});
+
+    // add legend
+    svg3.append("circle").attr("cx",width-20).attr("cy",height-100).attr("r", 20).style("fill", "#000000");
+    svg3.append("text").attr("x", width-20).attr("y", height-100).attr("dy", ".35em").attr("text-anchor", "middle")
+                       .style("fill", "#fff").attr("font-size", 14).text("rank");
+    svg3.append("text").attr("x", width-20).attr("y", height-60).attr("text-anchor", "middle")
+                       .style("fill", "#000000").attr("font-size", 14).text("BoardGameGeek Rank");
+
+    // // Add GT name to bottom right
+    // svg3.append("text").attr("x", width - margins.right - 50).attr("y", height).style("font-size", "12px").text("yqi82")   
+
+
+
+
+
+    // draw line chart 4
+    // create square root scale y_sr for Y axis with range
+    var y_log = d3.scaleLog()
+                  .range([height - 50, 50]);
+    // define y_sr domain
+    y_log.domain([1e-6, d3.max(data, function(d) {
+        return 1+Math.max(d.Catan_count, d.Dominion_count, d.Codenames_count, d.Terraforming_Mars_count, 
+        d.Gloomhaven_count, d.Magic_count, d.Dixit_count, d.Monopoly_count);})]);
+
+    // define the Y_sr Axis
+    var y_axis_log = d3.axisLeft(y_log).ticks(10);
+
+
+    // define lines_sr
+    var line1_log = d3.line().x(function(d) {return x(d.date);}).y(function(d) {return y_log(d.Catan_count);}).curve(d3.curveMonotoneX)
+    var line2_log = d3.line().x(function(d) {return x(d.date);}).y(function(d) {return y_log(d.Dominion_count);}).curve(d3.curveMonotoneX)
+    var line3_log = d3.line().x(function(d) {return x(d.date);}).y(function(d) {return y_log(d.Codenames_count);}).curve(d3.curveMonotoneX)
+    var line4_log = d3.line().x(function(d) {return x(d.date);}).y(function(d) {return y_log(d.Terraforming_Mars_count);}).curve(d3.curveMonotoneX)
+    var line5_log = d3.line().x(function(d) {return x(d.date);}).y(function(d) {return y_log(d.Gloomhaven_count);}).curve(d3.curveMonotoneX)
+    var line6_log = d3.line().x(function(d) {return x(d.date);}).y(function(d) {return y_log(d.Magic_count);}).curve(d3.curveMonotoneX)
+    var line7_log = d3.line().x(function(d) {return x(d.date);}).y(function(d) {return y_log(d.Dixit_count);}).curve(d3.curveMonotoneX)
+    var line8_log = d3.line().x(function(d) {return x(d.date);}).y(function(d) {return y_log(d.Monopoly_count);}).curve(d3.curveMonotoneX)
+
+
+    // append svg element to the body of the page
+    // set dimensions and position of the svg element
+    var svg4 = d3.select("body").append("svg")
+          .attr("width", width + margins.left + margins.right)
+          .attr("height", height + margins.top + margins.bottom)
+          .append("g")
+          .attr("transform","translate(" + margins.left + "," + margins.top + ")");
+
+    // add title
+    svg4.append("text").attr("x", width / 2).attr("y", margins.top / 2)
+        .attr("text-anchor", "middle")
+        .style("font-weight", "bold")
+        .style("font-size", "20px")
+        .text("Number of Ratings 2016-2020 (Log Scale)"); 
+
+    // add axis
+    svg4.append("g").attr("class", "x axis").attr("transform", "translate(0," + (height-50) + ")").call(x_axis);
+    svg4.append("g").attr("class", "y axis").attr("transform", "translate(" + 20 + ",0)").call(y_axis_log);
+
+    // add axis labels
+    svg4.append("text").attr("transform", "translate(" + width / 2 + " ," + (height) + ")")
+       .style("text-anchor", "middle").style("font-weight","bold").text("Month")
+    svg4.append("text").attr("transform", "rotate(-90)").attr("y", 0 - margins.left)
+       .attr("x", 0 - height / 2).attr("dy", "1em").style("text-aochor", "middle").style("font-weight","bold").text("Number of Ratings");
+
+    // add lines
+    svg4.append("path").datum(data).attr("class", "line").style("stroke", '#1f77b4').attr("d", line1_log);
+    svg4.append("path").datum(data).attr("class", "line").style("stroke", '#ff7f0e').attr("d", line2_log);
+    svg4.append("path").datum(data).attr("class", "line").style("stroke", '#2ca02c').attr("d", line3_log);
+    svg4.append("path").datum(data).attr("class", "line").style("stroke", '#d62728').attr("d", line4_log);
+    svg4.append("path").datum(data).attr("class", "line").style("stroke", '#9467bd').attr("d", line5_log);
+    svg4.append("path").datum(data).attr("class", "line").style("stroke", '#e377c2').attr("d", line6_log);
+    svg4.append("path").datum(data).attr("class", "line").style("stroke", '#bcbd22').attr("d", line7_log);
+    svg4.append("path").datum(data).attr("class", "line").style("stroke", '#17becf').attr("d", line8_log);
+
+    // add line labels
+    svg4.append("text").attr("transform", "translate(" + (width-90) + "," + y_log(data[45].Catan_count) + ")")
+		.attr("dy", ".35em").attr("font-size", 14).attr("text-anchor", "start").style("fill", "#1f77b4").text("Catan");
+    svg4.append("text").attr("transform", "translate(" + (width-90) + "," + y_log(data[45].Dominion_count) + ")")
+		.attr("dy", ".35em").attr("font-size", 14).attr("text-anchor", "start").style("fill", "#ff7f0e").text("Dominion");
+    svg4.append("text").attr("transform", "translate(" + (width-90) + "," + y_log(data[45].Codenames_count) + ")")
+		.attr("dy", ".35em").attr("font-size", 14).attr("text-anchor", "start").style("fill", "#2ca02c").text("Codenames");
+    svg4.append("text").attr("transform", "translate(" + (width-90) + "," + y_log(data[45].Terraforming_Mars_count) + ")")
+		.attr("dy", ".35em").attr("font-size", 14).attr("text-anchor", "start").style("fill", "#d62728").text("Terraforming Mars");
+    svg4.append("text").attr("transform", "translate(" + (width-90) + "," + y_log(data[45].Gloomhaven_count) + ")")
+		.attr("dy", ".35em").attr("font-size", 14).attr("text-anchor", "start").style("fill", "#9467bd").text("Gloomhaven");
+    svg4.append("text").attr("transform", "translate(" + (width-90) + "," + y_log(data[45].Magic_count) + ")")
+		.attr("dy", ".35em").attr("font-size", 14).attr("text-anchor", "start").style("fill", "#e377c2").text("Magic: The Gathering");
+    svg4.append("text").attr("transform", "translate(" + (width-90) + "," + y_log(data[45].Dixit_count) + ")")
+		.attr("dy", ".35em").attr("font-size", 14).attr("text-anchor", "start").style("fill", "#bcbd22").text("Dixit");
+    svg4.append("text").attr("transform", "translate(" + (width-90) + "," + y_log(data[45].Monopoly_count) + ")")
+		.attr("dy", ".35em").attr("font-size", 14).attr("text-anchor", "start").style("fill", "#17becf").text("Monopoly");
+
+
+    // define filtered ranking locations and values
+    var filtered_rankings_log = svg4.selectAll(".dot").data(data.filter(function(d, i) {return (i + 1) % 3 == 0})).enter()
+    var filtered_ranking_values_log = svg4.selectAll(".text").data(data.filter(function(d, i) {return (i + 1) % 3 == 0})).enter()
+
+    // add rankings for Catan
+    filtered_rankings_log.append("circle").attr("class", "dot").attr("cx", line1_log.x()).attr("cy", line1_log.y()).attr("r", 15).attr("fill", "#1f77b4");
+    filtered_ranking_values_log.append("text").attr("class", "text").attr("x", line1_log.x()).attr("y", line1_log.y()).attr("dy", ".35em").attr("text-anchor", "middle")
+                           .style("fill", "#fff").attr("font-size", 14).text( function(d) {return d.Catan_rank;});
+
+    // add rankings for Codenames
+    filtered_rankings_log.append("circle").attr("class", "dot").attr("cx", line3_log.x()).attr("cy", line3_log.y()).attr("r", 15).attr("fill", "#2ca02c");
+    filtered_ranking_values_log.append("text").attr("class", "text").attr("x", line3_log.x()).attr("y", line3_log.y()).attr("dy", ".35em").attr("text-anchor", "middle")
+                           .style("fill", "#fff").attr("font-size", 14).text( function(d) {return d.Codenames_rank;});
+
+    // add rankings for Terraforming Mars
+    filtered_rankings_log.append("circle").attr("class", "dot").attr("cx", line4_log.x()).attr("cy", line4_log.y()).attr("r", 15).attr("fill", "#d62728");
+    filtered_ranking_values_log.append("text").attr("class", "text").attr("x", line4_log.x()).attr("y", line4_log.y()).attr("dy", ".35em").attr("text-anchor", "middle")
+                           .style("fill", "#fff").attr("font-size", 14).text( function(d) {return d.Terraforming_Mars_rank;});
+
+
+    // add rankings for Gloomhaven
+    filtered_rankings_log.append("circle").attr("class", "dot").attr("cx", line5_log.x()).attr("cy", line5_log.y()).attr("r", 15).attr("fill", "#9467bd");
+
+    filtered_ranking_values_log.append("text").attr("class", "text").attr("x", line5_log.x()).attr("y", line5_log.y()).attr("dy", ".35em").attr("text-anchor", "middle")
+                           .style("fill", "#fff").attr("font-size", 14).text( function(d) {return d.Gloomhaven_rank;});
+
+    // add legend
+    svg4.append("circle").attr("cx",width-20).attr("cy",height-100).attr("r", 20).style("fill", "#000000");
+    svg4.append("text").attr("x", width-20).attr("y", height-100).attr("dy", ".35em").attr("text-anchor", "middle")
+                       .style("fill", "#fff").attr("font-size", 14).text("rank");
+    svg4.append("text").attr("x", width-20).attr("y", height-60).attr("text-anchor", "middle")
+                       .style("fill", "#000000").attr("font-size", 14).text("BoardGameGeek Rank");
+
+    // Add GT name to bottom right
+    svg4.append("text").attr("x", width - margins.right - 50).attr("y", height).style("font-size", "12px").text("yqi82")  
+
+}).catch(function (error) {
+    console.log(error);
+});
+
+</script>
+</body>
+</html>
